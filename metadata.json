@@ -1,0 +1,7 @@
+{
+  "name": "GrowthMind AI",
+  "description": "Una aplicación de IA que ayuda a las empresas a detectar problemas y generar soluciones simples y efectivas para mejorar la eficiencia y reducir costos.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
