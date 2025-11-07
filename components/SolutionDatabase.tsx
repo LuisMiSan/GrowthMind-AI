@@ -1,96 +1,24 @@
-import React, { useState } from 'react';
-import type { SolutionRecord, AnalysisResult, SolutionStep, GroundedAnswer } from '../types';
+import React, { useState, useMemo } from 'react';
+import type { SolutionRecord, BusinessArea } from '../types';
 import { SolutionModal } from './SolutionModal';
+import { PdfExporter } from './PdfExporter';
 import { DatabaseIcon } from './icons/DatabaseIcon';
 import { EyeIcon } from './icons/EyeIcon';
-import { DownloadIcon } from './icons/DownloadIcon';
-import { FileTextIcon } from './icons/FileTextIcon';
-import { SheetIcon } from './icons/SheetIcon';
-import { FileJsonIcon } from './icons/FileJsonIcon';
+import { FileDownIcon } from './icons/FileDownIcon';
+import { BusinessAreaDisplay } from './BusinessAreaDisplay';
+import { SearchIcon } from './icons/SearchIcon';
 
 interface SolutionDatabaseProps {
     records: SolutionRecord[];
 }
 
-const downloadFile = (content: string, fileName: string, contentType: string) => {
-    const blob = new Blob([content], { type: contentType });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
-};
-
-const formatStepsForMarkdown = (steps: SolutionStep[]): string => {
-    return steps.map(s => `1. **${s.title}**: ${s.description}`).join('\n');
-};
-
-const recordToMarkdown = (record: SolutionRecord): string => {
-    const { companyType, niche, problemDescription, businessArea, result, timestamp } = record;
-    let content = `
-# Solución para: ${companyType} - ${niche}
-
-**Fecha:** ${new Date(timestamp).toLocaleString()}
-**Área:** ${businessArea}
-
-## Problema Descrito
-> ${problemDescription}
-
----
-
-## Análisis y Solución
-`;
-
-    if ('answer' in result) {
-        const res = result as GroundedAnswer;
-        content += `${res.answer}\n\n`;
-        if (res.sources && res.sources.length > 0) {
-            content += '### Fuentes\n';
-            res.sources.forEach(source => {
-                content += `- [${source.title || 'Fuente sin título'}](${source.uri})\n`;
-            });
-        }
-    } else {
-        const res = result as AnalysisResult;
-        content += `
-### Diagnóstico del Problema
-**Problema Identificado:** ${res.problemAnalysis.identifiedProblem}
-**Impacto en el Negocio:** ${res.problemAnalysis.impact}
-
-### Solución a Corto Plazo: ${res.shortTermSolution.title} ${res.shortTermSolution.isPremium ? '**(Premium)**' : ''}
-**Resumen:** ${res.shortTermSolution.summary}
-**Pasos:**
-${formatStepsForMarkdown(res.shortTermSolution.steps)}
-
-### Solución a Largo Plazo: ${res.longTermSolution.title} ${res.longTermSolution.isPremium ? '**(Premium)**' : ''}
-**Resumen:** ${res.longTermSolution.summary}
-**Pasos:**
-${formatStepsForMarkdown(res.longTermSolution.steps)}
-`;
-    }
-    return content;
-};
-
 export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) => {
     const [selectedRecord, setSelectedRecord] = useState<SolutionRecord | null>(null);
-    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [exportingRecordId, setExportingRecordId] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [areaFilter, setAreaFilter] = useState<BusinessArea | 'all'>('all');
+    const [dateFilter, setDateFilter] = useState<'all' | 'last7days' | 'last30days' | 'lastyear'>('all');
 
-    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.checked) {
-            setSelectedIds(records.map(r => r.id));
-        } else {
-            setSelectedIds([]);
-        }
-    };
-
-    const handleSelectOne = (id: string) => {
-        setSelectedIds(prev =>
-            prev.includes(id) ? prev.filter(selectedId => selectedId !== id) : [...prev, id]
-        );
-    };
-    
     const handleViewRecord = (record: SolutionRecord) => {
         setSelectedRecord(record);
     };
@@ -98,74 +26,44 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
     const handleCloseModal = () => {
         setSelectedRecord(null);
     };
-
-    const handleExportMarkdown = () => {
-        const selectedRecords = records.filter(r => selectedIds.includes(r.id));
-        if (selectedRecords.length === 0) return;
-        
-        const markdownContent = selectedRecords.map(recordToMarkdown).join('\n\n---\n\n');
-        downloadFile(markdownContent, `soluciones_exportadas_${Date.now()}.md`, 'text/markdown;charset=utf-8;');
-    };
     
-    const handleExportJson = () => {
-        if (records.length === 0) return;
-        const jsonContent = JSON.stringify(records, null, 2);
-        downloadFile(jsonContent, `base_conocimiento_${Date.now()}.json`, 'application/json');
-    };
-    
-    const handleExportCsv = () => {
-        if (records.length === 0) return;
+    const recordToExport = records.find(r => r.id === exportingRecordId);
 
-        const headers = [
-            'id', 'timestamp', 'companyType', 'niche', 'businessArea', 'problemDescription',
-            'resultType', 'groundedAnswer', 'groundedSources', 'pa_identifiedProblem', 'pa_impact',
-            'st_title', 'st_summary', 'st_steps', 'st_isPremium', 'lt_title', 'lt_summary', 'lt_steps', 'lt_isPremium'
-        ];
+    const filteredRecords = useMemo(() => {
+        const now = new Date();
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
 
-        const escapeCsvCell = (cell: any): string => {
-            if (cell === null || cell === undefined) return '';
-            const str = String(cell);
-            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-                return `"${str.replace(/"/g, '""')}"`;
-            }
-            return str;
-        };
+        return records.filter(record => {
+            const lowerCaseQuery = searchQuery.toLowerCase();
+            const matchesSearch = lowerCaseQuery === '' ||
+                record.companyType.toLowerCase().includes(lowerCaseQuery) ||
+                record.niche.toLowerCase().includes(lowerCaseQuery) ||
+                record.problemDescription.toLowerCase().includes(lowerCaseQuery);
 
-        const rows = records.map(record => {
-            const row: Record<string, any> = {
-                id: record.id,
-                timestamp: record.timestamp,
-                companyType: record.companyType,
-                niche: record.niche,
-                businessArea: record.businessArea,
-                problemDescription: record.problemDescription,
-            };
+            const matchesArea = areaFilter === 'all' || record.businessArea === areaFilter;
 
-            if ('answer' in record.result) {
-                row.resultType = 'GroundedAnswer';
-                row.groundedAnswer = record.result.answer;
-                row.groundedSources = JSON.stringify(record.result.sources);
-            } else {
-                const res = record.result as AnalysisResult;
-                row.resultType = 'AnalysisResult';
-                row.pa_identifiedProblem = res.problemAnalysis.identifiedProblem;
-                row.pa_impact = res.problemAnalysis.impact;
-                row.st_title = res.shortTermSolution.title;
-                row.st_summary = res.shortTermSolution.summary;
-                row.st_steps = JSON.stringify(res.shortTermSolution.steps);
-                row.st_isPremium = res.shortTermSolution.isPremium || false;
-                row.lt_title = res.longTermSolution.title;
-                row.lt_summary = res.longTermSolution.summary;
-                row.lt_steps = JSON.stringify(res.longTermSolution.steps);
-                row.lt_isPremium = res.longTermSolution.isPremium || false;
+            const recordDate = new Date(record.timestamp);
+            let matchesDate = true;
+            switch (dateFilter) {
+                case 'last7days':
+                    matchesDate = recordDate >= sevenDaysAgo;
+                    break;
+                case 'last30days':
+                    matchesDate = recordDate >= thirtyDaysAgo;
+                    break;
+                case 'lastyear':
+                    matchesDate = recordDate >= oneYearAgo;
+                    break;
+                default:
+                    matchesDate = true;
             }
 
-            return headers.map(header => escapeCsvCell(row[header])).join(',');
+            return matchesSearch && matchesArea && matchesDate;
         });
+    }, [records, searchQuery, areaFilter, dateFilter]);
 
-        const csvContent = [headers.join(','), ...rows].join('\n');
-        downloadFile(csvContent, `base_conocimiento_${Date.now()}.csv`, 'text/csv;charset=utf-8;');
-    };
 
     return (
         <>
@@ -174,36 +72,54 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                     <DatabaseIcon className="h-6 w-6 text-cyan-400" />
                     Base de Conocimiento
                 </h2>
-                <p className="text-center text-slate-400 mb-6">Aquí se guardan todos los análisis que has generado.</p>
+                <p className="text-center text-slate-400 mb-6">Aquí se guardan todos los análisis que has generado. Puedes buscar, filtrar, ver los detalles o exportar a PDF.</p>
                 
-                {records.length > 0 && (
-                    <div className="mb-6 p-4 bg-slate-800 rounded-xl border border-slate-700">
-                        <h3 className="text-lg font-semibold text-slate-300 mb-3 flex items-center gap-2"><DownloadIcon className="h-5 w-5"/> Opciones de Exportación</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <button 
-                                onClick={handleExportMarkdown} 
-                                disabled={selectedIds.length === 0}
-                                className="flex items-center justify-center gap-2 text-sm bg-slate-700 hover:bg-slate-600/70 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                <FileTextIcon className="h-4 w-4" />
-                                <span>Exportar {selectedIds.length > 0 ? `(${selectedIds.length}) ` : ''}a Markdown</span>
-                            </button>
-                             <button 
-                                onClick={handleExportCsv}
-                                disabled={records.length === 0}
-                                className="flex items-center justify-center gap-2 text-sm bg-slate-700 hover:bg-slate-600/70 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                <SheetIcon className="h-4 w-4" />
-                                <span>Exportar todo a CSV</span>
-                            </button>
-                             <button 
-                                onClick={handleExportJson}
-                                disabled={records.length === 0}
-                                className="flex items-center justify-center gap-2 text-sm bg-slate-700 hover:bg-slate-600/70 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                <FileJsonIcon className="h-4 w-4" />
-                                <span>Exportar todo a JSON</span>
-                            </button>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="relative">
+                        <label htmlFor="search-records" className="sr-only">Buscar...</label>
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <SearchIcon className="h-5 w-5 text-slate-400" />
                         </div>
+                        <input
+                            type="search"
+                            id="search-records"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Buscar por empresa, nicho..."
+                            className="w-full pl-10 p-2.5 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                        />
                     </div>
-                )}
+                    <div>
+                        <select
+                            value={areaFilter}
+                            onChange={(e) => setAreaFilter(e.target.value as BusinessArea | 'all')}
+                            className="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                            aria-label="Filtrar por área de negocio"
+                        >
+                            <option value="all">Todas las Áreas</option>
+                            <option value="general">General</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="sales">Ventas</option>
+                            <option value="logistics">Logística</option>
+                            <option value="hr">Recursos Humanos</option>
+                            <option value="finance">Finanzas</option>
+                            <option value="it">TI</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select
+                            value={dateFilter}
+                            onChange={(e) => setDateFilter(e.target.value as any)}
+                            className="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                            aria-label="Filtrar por fecha"
+                        >
+                            <option value="all">Cualquier Fecha</option>
+                            <option value="last7days">Últimos 7 días</option>
+                            <option value="last30days">Últimos 30 días</option>
+                            <option value="lastyear">Último año</option>
+                        </select>
+                    </div>
+                </div>
 
                 <div className="bg-slate-800 rounded-2xl shadow-2xl shadow-slate-950/50 border border-slate-700 overflow-hidden">
                     <div className="overflow-x-auto">
@@ -211,53 +127,71 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                             <table className="min-w-full divide-y divide-slate-700">
                                 <thead className="bg-slate-900/50">
                                     <tr>
-                                        <th scope="col" className="p-4">
-                                            <input 
-                                                type="checkbox" 
-                                                className="h-4 w-4 bg-slate-700 border-slate-600 text-cyan-600 focus:ring-cyan-500 rounded"
-                                                checked={records.length > 0 && selectedIds.length === records.length}
-                                                onChange={handleSelectAll}
-                                                aria-label="Seleccionar todos los registros"
-                                            />
-                                        </th>
                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Empresa / Nicho</th>
                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Problema</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Área</th>
                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Fecha</th>
-                                        <th scope="col" className="relative px-6 py-3">
-                                            <span className="sr-only">Ver</span>
+                                        <th scope="col" className="relative px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">
+                                            Acciones
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-slate-800 divide-y divide-slate-700">
-                                    {records.map((record) => (
-                                        <tr key={record.id} className={`transition-colors ${selectedIds.includes(record.id) ? 'bg-cyan-900/40' : 'hover:bg-slate-700/50'}`}>
-                                            <td className="p-4">
-                                                <input
-                                                    type="checkbox"
-                                                    className="h-4 w-4 bg-slate-700 border-slate-600 text-cyan-600 focus:ring-cyan-500 rounded"
-                                                    checked={selectedIds.includes(record.id)}
-                                                    onChange={() => handleSelectOne(record.id)}
-                                                    aria-label={`Seleccionar registro para ${record.companyType}`}
-                                                />
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-slate-200">{record.companyType}</div>
-                                                <div className="text-sm text-slate-400">{record.niche}</div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <p className="text-sm text-slate-300 max-w-xs truncate">{record.problemDescription}</p>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
-                                                {new Date(record.timestamp).toLocaleDateString()}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <button onClick={() => handleViewRecord(record)} className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5" aria-label="Ver solución">
-                                                    <EyeIcon className="h-4 w-4" />
-                                                    Ver
-                                                </button>
+                                    {filteredRecords.length > 0 ? (
+                                        filteredRecords.map((record) => (
+                                            <tr key={record.id} className="hover:bg-slate-700/50 transition-colors">
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm font-medium text-slate-200">{record.companyType}</div>
+                                                    <div className="text-sm text-slate-400">{record.niche}</div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <p className="text-sm text-slate-300 max-w-xs truncate">{record.problemDescription}</p>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                                                    <BusinessAreaDisplay area={record.businessArea} />
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                                                    {new Date(record.timestamp).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                    <div className="flex items-center justify-end space-x-4">
+                                                        <button onClick={() => handleViewRecord(record)} className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5" aria-label="Ver detalles">
+                                                            <EyeIcon className="h-4 w-4" />
+                                                            Ver
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => setExportingRecordId(record.id)} 
+                                                            className="text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-wait"
+                                                            aria-label="Exportar a PDF"
+                                                            disabled={!!exportingRecordId}
+                                                        >
+                                                            {exportingRecordId === record.id ? (
+                                                                <>
+                                                                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                    </svg>
+                                                                    ...
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                  <FileDownIcon className="h-4 w-4" />
+                                                                  PDF
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={5} className="text-center text-slate-500 py-10 px-4">
+                                                <p>No se encontraron resultados.</p>
+                                                <p className="text-sm">Intenta ajustar tus filtros de búsqueda.</p>
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         ) : (
@@ -270,6 +204,16 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                 </div>
             </div>
             {selectedRecord && <SolutionModal record={selectedRecord} onClose={handleCloseModal} />}
+            
+            {/* Off-screen exporter component */}
+            {exportingRecordId && (
+                <div className="fixed left-[-9999px] top-[-9999px]" aria-hidden="true">
+                    <PdfExporter 
+                        record={recordToExport} 
+                        onComplete={() => setExportingRecordId(null)} 
+                    />
+                </div>
+            )}
         </>
     );
 };
