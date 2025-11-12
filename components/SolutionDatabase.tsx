@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import type { SolutionRecord, BusinessArea } from '../types';
 import { SolutionModal } from './SolutionModal';
@@ -67,7 +68,7 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
 
     return (
         <>
-            <div className="w-full max-w-4xl mt-12">
+            <div className="w-full max-w-4xl mt-12 slide-in-up" style={{animationDelay: '200ms', opacity: 0}}>
                 <h2 className="text-2xl font-bold mb-4 text-center text-slate-200 flex items-center justify-center gap-3">
                     <DatabaseIcon className="h-6 w-6 text-cyan-400" />
                     Base de Conocimiento
@@ -139,7 +140,7 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                                 <tbody className="bg-slate-800 divide-y divide-slate-700">
                                     {filteredRecords.length > 0 ? (
                                         filteredRecords.map((record) => (
-                                            <tr key={record.id} className="hover:bg-slate-700/50 transition-colors">
+                                            <tr key={record.id} className="hover:bg-slate-700/50 transition-all duration-200 transform hover:-translate-y-px">
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-slate-200">{record.companyType}</div>
                                                     <div className="text-sm text-slate-400">{record.niche}</div>
@@ -155,13 +156,13 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                     <div className="flex items-center justify-end space-x-4">
-                                                        <button onClick={() => handleViewRecord(record)} className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5" aria-label="Ver detalles">
+                                                        <button onClick={() => handleViewRecord(record)} className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 transition transform hover:scale-110" aria-label="Ver detalles">
                                                             <EyeIcon className="h-4 w-4" />
                                                             Ver
                                                         </button>
                                                         <button 
                                                             onClick={() => setExportingRecordId(record.id)} 
-                                                            className="text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-wait"
+                                                            className="text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-wait transition transform hover:scale-110"
                                                             aria-label="Exportar a PDF"
                                                             disabled={!!exportingRecordId}
                                                         >

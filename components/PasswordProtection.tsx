@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { BrainCircuitIcon } from './icons/BrainCircuitIcon';
 
@@ -31,7 +32,7 @@ export const PasswordProtection: React.FC<PasswordProtectionProps> = ({ onAuthSu
                     GrowthMind AI
                   </h1>
                 </div>
-                <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700">
+                <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 scale-in">
                     <h2 className="text-xl font-bold text-slate-200 mb-2">Acceso a la Beta Privada</h2>
                     <p className="text-slate-400 mb-6">Esta aplicación está en fase de prueba. Introduce la contraseña para continuar.</p>
                     <form onSubmit={handleSubmit} className="space-y-4">

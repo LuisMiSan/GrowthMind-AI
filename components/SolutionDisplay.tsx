@@ -26,7 +26,7 @@ const LoadingSkeleton: React.FC = () => (
     </div>
 );
 
-const SolutionSection: React.FC<{ title: string; children: React.ReactNode; textToSpeak: string; isPremium?: boolean }> = ({ title, children, textToSpeak, isPremium }) => {
+const SolutionSection: React.FC<{ title: string; children: React.ReactNode; textToSpeak: string; isPremium?: boolean; className?: string }> = ({ title, children, textToSpeak, isPremium, className }) => {
     const [isSpeaking, setIsSpeaking] = useState(false);
     
     const handleSpeak = async () => {
@@ -43,7 +43,7 @@ const SolutionSection: React.FC<{ title: string; children: React.ReactNode; text
     };
     
     return (
-        <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-700">
+        <div className={`bg-slate-900/50 p-6 rounded-xl border border-slate-700 slide-in-up ${className}`}>
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-cyan-400 flex items-center gap-2">
                     {title}
@@ -57,7 +57,7 @@ const SolutionSection: React.FC<{ title: string; children: React.ReactNode; text
                 <button
                     onClick={handleSpeak}
                     disabled={isSpeaking}
-                    className="p-2 rounded-full hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-wait"
+                    className="p-2 rounded-full hover:bg-slate-700 transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-wait"
                     aria-label="Escuchar texto"
                 >
                     {isSpeaking ? (
@@ -88,7 +88,7 @@ export const SolutionDisplay: React.FC<SolutionDisplayProps> = ({ result, isLoad
         const { answer, sources } = result;
         const textToSpeak = `${answer} ${sources.length > 0 ? 'Fuentes consultadas:' : ''} ${sources.map(s => s.title).join(', ')}`;
         return (
-             <SolutionSection title="Análisis con Búsqueda Web" textToSpeak={textToSpeak}>
+             <SolutionSection title="Análisis con Búsqueda Web" textToSpeak={textToSpeak} className="opacity-0" style={{ animationDelay: '100ms' }}>
                  <p className="text-slate-300 whitespace-pre-wrap">{answer}</p>
                  {sources.length > 0 && (
                      <div className="mt-6">
@@ -115,7 +115,7 @@ export const SolutionDisplay: React.FC<SolutionDisplayProps> = ({ result, isLoad
     
     return (
         <div className="space-y-8">
-            <SolutionSection title="Diagnóstico del Problema" textToSpeak={`Problema identificado: ${problemAnalysis.identifiedProblem}. Impacto: ${problemAnalysis.impact}`}>
+            <SolutionSection title="Diagnóstico del Problema" textToSpeak={`Problema identificado: ${problemAnalysis.identifiedProblem}. Impacto: ${problemAnalysis.impact}`} className="opacity-0" style={{ animationDelay: '100ms' }}>
                 <div>
                     <h4 className="font-semibold text-slate-300">Problema Identificado:</h4>
                     <p className="text-slate-400 mt-1">{problemAnalysis.identifiedProblem}</p>
@@ -126,7 +126,7 @@ export const SolutionDisplay: React.FC<SolutionDisplayProps> = ({ result, isLoad
                 </div>
             </SolutionSection>
 
-            <SolutionSection title={shortTermSolution.title} textToSpeak={shortTermText} isPremium={shortTermSolution.isPremium}>
+            <SolutionSection title={shortTermSolution.title} textToSpeak={shortTermText} isPremium={shortTermSolution.isPremium} className="opacity-0" style={{ animationDelay: '250ms' }}>
                 <p className="text-slate-400 mb-4">{shortTermSolution.summary}</p>
                  <ul className="space-y-3">
                     {shortTermSolution.steps.map((step) => (
@@ -141,7 +141,7 @@ export const SolutionDisplay: React.FC<SolutionDisplayProps> = ({ result, isLoad
                 </ul>
             </SolutionSection>
 
-             <SolutionSection title={longTermSolution.title} textToSpeak={longTermText} isPremium={longTermSolution.isPremium}>
+             <SolutionSection title={longTermSolution.title} textToSpeak={longTermText} isPremium={longTermSolution.isPremium} className="opacity-0" style={{ animationDelay: '400ms' }}>
                 <p className="text-slate-400 mb-4">{longTermSolution.summary}</p>
                  <ul className="space-y-3">
                     {longTermSolution.steps.map((step) => (

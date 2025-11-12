@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import type { SolutionRecord } from '../types';
 import { SolutionDisplay } from './SolutionDisplay';
@@ -25,14 +26,14 @@ export const SolutionModal: React.FC<SolutionModalProps> = ({ record, onClose })
 
     return (
         <div 
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex justify-center items-center p-4"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex justify-center items-center p-4 fade-in"
             aria-labelledby="solution-modal-title"
             role="dialog"
             aria-modal="true"
             onClick={onClose}
         >
             <div 
-                className="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-4xl max-h-[90vh] flex flex-col"
+                className="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-4xl max-h-[90vh] flex flex-col scale-in"
                 onClick={(e) => e.stopPropagation()}
             >
                 <header className="flex items-center justify-between p-4 border-b border-slate-700 flex-shrink-0">

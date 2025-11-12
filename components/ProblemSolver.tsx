@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, forwardRef } from 'react';
 import type { BusinessArea, AnalysisResult, GroundedAnswer, Example, SolutionRecord } from '../types';
 import { analyzeProblemComplex, analyzeProblemWithSearch } from '../services/geminiService';
 import { SolutionDisplay } from './SolutionDisplay';
@@ -7,10 +8,11 @@ import { ExamplePicker } from './ExamplePicker';
 
 interface ProblemSolverProps {
     onSolutionGenerated: (record: Omit<SolutionRecord, 'id' | 'timestamp'>) => void;
+    description: string;
+    onDescriptionChange: (value: string) => void;
 }
 
-export const ProblemSolver: React.FC<ProblemSolverProps> = ({ onSolutionGenerated }) => {
-    const [description, setDescription] = useState('');
+export const ProblemSolver = forwardRef<HTMLDivElement, ProblemSolverProps>(({ onSolutionGenerated, description, onDescriptionChange }, ref) => {
     const [area, setArea] = useState<BusinessArea>('general');
     const [companyType, setCompanyType] = useState('');
     const [niche, setNiche] = useState('');
@@ -63,13 +65,13 @@ export const ProblemSolver: React.FC<ProblemSolverProps> = ({ onSolutionGenerate
     }
     
     const handleSelectExample = (example: Example) => {
-        setDescription(example.description);
+        onDescriptionChange(example.description);
         setArea(example.area);
     };
 
 
     return (
-        <div className="w-full max-w-4xl p-4 md:p-6 bg-slate-800 rounded-2xl shadow-2xl shadow-slate-950/50 border border-slate-700">
+        <div ref={ref} className="w-full max-w-4xl p-4 md:p-6 bg-slate-800 rounded-2xl shadow-2xl shadow-slate-950/50 border border-slate-700 slide-in-up">
             <ExamplePicker onSelectExample={handleSelectExample} />
 
             <div className="relative my-8">
@@ -89,7 +91,7 @@ export const ProblemSolver: React.FC<ProblemSolverProps> = ({ onSolutionGenerate
                     <textarea
                         id="description"
                         value={description}
-                        onChange={(e) => setDescription(e.target.value)}
+                        onChange={(e) => onDescriptionChange(e.target.value)}
                         placeholder="Ej: Nuestras ventas han caído un 20% en el último trimestre y no sabemos por qué..."
                         className="w-full h-36 p-3 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-shadow"
                         disabled={isLoading}
@@ -146,8 +148,8 @@ export const ProblemSolver: React.FC<ProblemSolverProps> = ({ onSolutionGenerate
                      <div className="flex flex-col space-y-2">
                         <label className="block text-sm font-medium text-slate-400">Modo de Análisis</label>
                         <div className="flex bg-slate-900 rounded-lg border border-slate-700 p-1">
-                            <button type="button" onClick={() => handleToggleChange('thinking')} className={`w-1/2 py-2 text-sm rounded-md transition-colors ${useThinkingMode ? 'bg-cyan-600 text-white' : 'hover:bg-slate-800'}`}>Análisis Profundo</button>
-                            <button type="button" onClick={() => handleToggleChange('search')} className={`w-1/2 py-2 text-sm rounded-md transition-colors ${useSearch ? 'bg-cyan-600 text-white' : 'hover:bg-slate-800'}`}>Búsqueda Web</button>
+                            <button type="button" onClick={() => handleToggleChange('thinking')} className={`w-1/2 py-2 text-sm rounded-md transition-all duration-200 transform hover:scale-105 ${useThinkingMode ? 'bg-cyan-600 text-white shadow-md' : 'hover:bg-slate-700/80'}`}>Análisis Profundo</button>
+                            <button type="button" onClick={() => handleToggleChange('search')} className={`w-1/2 py-2 text-sm rounded-md transition-all duration-200 transform hover:scale-105 ${useSearch ? 'bg-cyan-600 text-white shadow-md' : 'hover:bg-slate-700/80'}`}>Búsqueda Web</button>
                         </div>
                     </div>
                 </div>
@@ -181,4 +183,4 @@ export const ProblemSolver: React.FC<ProblemSolverProps> = ({ onSolutionGenerate
             </div>
         </div>
     );
-};
+});

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { Header } from './components/Header';
 import { ProblemSolver } from './components/ProblemSolver';
 import { ChatWidget } from './components/ChatWidget';
@@ -12,9 +13,11 @@ const AUTH_KEY = 'growthmind-beta-auth';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    // Basic session persistence to avoid re-entering password on refresh
     return sessionStorage.getItem(AUTH_KEY) === 'true';
   });
+  
+  const [mainDescription, setMainDescription] = useState('');
+  const problemSolverRef = useRef<HTMLDivElement>(null);
 
   const [solutionRecords, setSolutionRecords] = useState<SolutionRecord[]>(() => {
     try {
@@ -52,19 +55,30 @@ const App: React.FC = () => {
     sessionStorage.setItem(AUTH_KEY, 'true');
     setIsAuthenticated(true);
   }
+  
+  const handleAnalyzeRequest = (text: string) => {
+    setMainDescription(text);
+    problemSolverRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
 
   if (!isAuthenticated) {
     return <PasswordProtection onAuthSuccess={handleAuthSuccess} />;
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col fade-in">
       <Header />
       <main className="flex-grow container mx-auto p-4 flex flex-col items-center">
-        <ProblemSolver onSolutionGenerated={handleSolutionGenerated} />
+        <ProblemSolver 
+          ref={problemSolverRef}
+          description={mainDescription}
+          onDescriptionChange={setMainDescription}
+          onSolutionGenerated={handleSolutionGenerated} 
+        />
         <SolutionDatabase records={solutionRecords} />
       </main>
-      <ChatWidget />
+      <ChatWidget onAnalyzeRequest={handleAnalyzeRequest} />
       <footer className="text-center p-4 text-slate-500 text-sm">
         <p className="mb-2">
             <strong>Aviso:</strong> Esta es una versión beta con fines de prueba. No introduzcas datos comerciales críticos o sensibles. 

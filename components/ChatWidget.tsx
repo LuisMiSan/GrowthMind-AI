@@ -9,10 +9,16 @@ import { SparklesIcon } from './icons/SparklesIcon';
 import { MicrophoneIcon } from './icons/MicrophoneIcon';
 import { StopCircleIcon } from './icons/StopCircleIcon';
 import { encode, LiveAudioUtils } from '../utils/audioUtils';
+import { CopyIcon } from './icons/CopyIcon';
+import { CheckIcon } from './icons/CheckIcon';
 
 const CHAT_HISTORY_KEY = 'business-ai-solver-chat-history';
 
-export const ChatWidget: React.FC = () => {
+interface ChatWidgetProps {
+    onAnalyzeRequest: (text: string) => void;
+}
+
+export const ChatWidget: React.FC<ChatWidgetProps> = ({ onAnalyzeRequest }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>(() => {
         try {
@@ -33,6 +39,7 @@ export const ChatWidget: React.FC = () => {
     const [isVoiceMode, setIsVoiceMode] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
+    const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
 
     const chatRef = useRef<Chat | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -72,7 +79,7 @@ export const ChatWidget: React.FC = () => {
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, isListening]);
+    }, [messages, isLoading, isListening]);
 
     const cleanupVoice = async () => {
         if (sessionPromiseRef.current) {
@@ -86,8 +93,12 @@ export const ChatWidget: React.FC = () => {
         mediaStreamRef.current?.getTracks().forEach(track => track.stop());
         mediaStreamSourceRef.current?.disconnect();
         scriptProcessorRef.current?.disconnect();
-        inputAudioContextRef.current?.close();
-        outputAudioContextRef.current?.close();
+        if (inputAudioContextRef.current?.state !== 'closed') {
+          inputAudioContextRef.current?.close();
+        }
+        if (outputAudioContextRef.current?.state !== 'closed') {
+          outputAudioContextRef.current?.close();
+        }
 
         sessionPromiseRef.current = null;
         inputAudioContextRef.current = null;
@@ -116,8 +127,9 @@ export const ChatWidget: React.FC = () => {
                 sessionPromiseRef.current = connectToLiveSession({
                     onopen: () => {
                         console.log("Voice session opened.");
-                        mediaStreamSourceRef.current = inputAudioContextRef.current!.createMediaStreamSource(mediaStreamRef.current!);
-                        scriptProcessorRef.current = inputAudioContextRef.current!.createScriptProcessor(4096, 1, 1);
+                        if (!mediaStreamRef.current || !inputAudioContextRef.current) return;
+                        mediaStreamSourceRef.current = inputAudioContextRef.current.createMediaStreamSource(mediaStreamRef.current);
+                        scriptProcessorRef.current = inputAudioContextRef.current.createScriptProcessor(4096, 1, 1);
                         scriptProcessorRef.current.onaudioprocess = (audioProcessingEvent) => {
                             const inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
                             const l = inputData.length;
@@ -134,7 +146,7 @@ export const ChatWidget: React.FC = () => {
                             });
                         };
                         mediaStreamSourceRef.current.connect(scriptProcessorRef.current);
-                        scriptProcessorRef.current.connect(inputAudioContextRef.current!.destination);
+                        scriptProcessorRef.current.connect(inputAudioContextRef.current.destination);
                     },
                     onmessage: async (message: LiveServerMessage) => {
                         if (message.serverContent?.inputTranscription) {
@@ -146,13 +158,13 @@ export const ChatWidget: React.FC = () => {
                         }
 
                         const base64Audio = message.serverContent?.modelTurn?.parts[0]?.inlineData.data;
-                        if (base64Audio) {
+                        if (base64Audio && outputAudioContextRef.current) {
                             setIsSpeaking(true);
-                            nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outputAudioContextRef.current!.currentTime);
-                            const audioBuffer = await LiveAudioUtils.decodeAudioData(LiveAudioUtils.decode(base64Audio), outputAudioContextRef.current!, 24000, 1);
-                            const source = outputAudioContextRef.current!.createBufferSource();
+                            nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outputAudioContextRef.current.currentTime);
+                            const audioBuffer = await LiveAudioUtils.decodeAudioData(LiveAudioUtils.decode(base64Audio), outputAudioContextRef.current, 24000, 1);
+                            const source = outputAudioContextRef.current.createBufferSource();
                             source.buffer = audioBuffer;
-                            source.connect(outputAudioContextRef.current!.destination);
+                            source.connect(outputAudioContextRef.current.destination);
                             source.addEventListener('ended', () => {
                                 outputSourcesRef.current.delete(source);
                                 if (outputSourcesRef.current.size === 0) {
@@ -233,6 +245,18 @@ export const ChatWidget: React.FC = () => {
         }
     };
     
+    const handleCopy = (index: number, content: string) => {
+        navigator.clipboard.writeText(content);
+        setCopiedMessageIndex(index);
+        setTimeout(() => setCopiedMessageIndex(null), 2000);
+    };
+
+    const handleAnalyze = (content: string) => {
+        onAnalyzeRequest(content);
+        setIsOpen(false);
+        cleanupVoice();
+    };
+    
     const renderVoiceFooter = () => (
         <div className="p-4 border-t border-slate-700 flex flex-col items-center justify-center h-[76px]">
             <div className="flex items-center gap-4">
@@ -292,7 +316,7 @@ export const ChatWidget: React.FC = () => {
     }
 
     return (
-        <div className="fixed bottom-5 right-5 w-[calc(100%-2.5rem)] max-w-sm h-[70vh] max-h-[600px] flex flex-col bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 z-50">
+        <div className="fixed bottom-5 right-5 w-[calc(100%-2.5rem)] max-w-sm h-[70vh] max-h-[600px] flex flex-col bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 z-50 chat-widget-enter">
             <header className="flex items-center justify-between p-4 border-b border-slate-700">
                 <h3 className="text-lg font-bold flex items-center gap-2"><SparklesIcon className="text-cyan-400 h-5 w-5"/> Asistente Rápido</h3>
                 <button onClick={() => { setIsOpen(false); cleanupVoice(); }} className="p-1 rounded-full hover:bg-slate-700">
@@ -302,10 +326,30 @@ export const ChatWidget: React.FC = () => {
 
             <div className="flex-grow p-4 overflow-y-auto space-y-4">
                 {messages.map((msg, index) => (
-                    <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-xs md:max-w-sm rounded-xl px-4 py-2 ${msg.role === 'user' ? 'bg-cyan-600 text-white' : 'bg-slate-700 text-slate-200'}`}>
+                    <div key={index} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} fade-in`}>
+                        <div className={`max-w-xs md:max-w-sm px-4 py-2 ${msg.role === 'user' 
+                                ? 'bg-cyan-600 text-white rounded-t-xl rounded-bl-xl' 
+                                : 'bg-slate-700 text-slate-200 rounded-t-xl rounded-br-xl'}`}>
                             <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                         </div>
+                         {msg.role === 'model' && (
+                            <div className="mt-2 flex items-center gap-2">
+                                <button 
+                                    onClick={() => handleCopy(index, msg.content)}
+                                    className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-cyan-400 transition-colors p-1 rounded-md hover:bg-slate-700"
+                                >
+                                    {copiedMessageIndex === index ? <CheckIcon className="h-3 w-3 text-green-400"/> : <CopyIcon className="h-3 w-3" />}
+                                    {copiedMessageIndex === index ? 'Copiado' : 'Copiar'}
+                                </button>
+                                <button
+                                     onClick={() => handleAnalyze(msg.content)}
+                                     className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-cyan-400 transition-colors p-1 rounded-md hover:bg-slate-700"
+                                >
+                                    <SparklesIcon className="h-3 w-3" />
+                                    Analizar
+                                </button>
+                            </div>
+                        )}
                     </div>
                 ))}
                 {(isLoading || isListening) && (
