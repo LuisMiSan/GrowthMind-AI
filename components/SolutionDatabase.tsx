@@ -1,13 +1,16 @@
 
 import React, { useState, useMemo } from 'react';
-import type { SolutionRecord, BusinessArea } from '../types';
+import type { SolutionRecord, BusinessArea, SolutionStep } from '../types';
 import { SolutionModal } from './SolutionModal';
-import { PdfExporter } from './PdfExporter';
+import { MultiRecordPdfExporter, PdfExporter } from './PdfExporter';
 import { DatabaseIcon } from './icons/DatabaseIcon';
 import { EyeIcon } from './icons/EyeIcon';
 import { FileDownIcon } from './icons/FileDownIcon';
 import { BusinessAreaDisplay } from './BusinessAreaDisplay';
 import { SearchIcon } from './icons/SearchIcon';
+import { FileJsonIcon } from './icons/FileJsonIcon';
+import { SheetIcon } from './icons/SheetIcon';
+import { FileTextIcon } from './icons/FileTextIcon';
 
 interface SolutionDatabaseProps {
     records: SolutionRecord[];
@@ -16,6 +19,7 @@ interface SolutionDatabaseProps {
 export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) => {
     const [selectedRecord, setSelectedRecord] = useState<SolutionRecord | null>(null);
     const [exportingRecordId, setExportingRecordId] = useState<string | null>(null);
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [areaFilter, setAreaFilter] = useState<BusinessArea | 'all'>('all');
     const [dateFilter, setDateFilter] = useState<'all' | 'last7days' | 'last30days' | 'lastyear'>('all');
@@ -64,6 +68,102 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
             return matchesSearch && matchesArea && matchesDate;
         });
     }, [records, searchQuery, areaFilter, dateFilter]);
+    
+    const handleExportJson = () => {
+        if (filteredRecords.length === 0) return;
+        const jsonString = JSON.stringify(filteredRecords, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `GrowthMind_AI_Export_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+    const handleExportCsv = () => {
+        if (filteredRecords.length === 0) return;
+
+        const escapeCsvField = (field: any): string => {
+            const stringField = String(field ?? '');
+            if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n')) {
+                return `"${stringField.replace(/"/g, '""')}"`;
+            }
+            return stringField;
+        };
+
+        const formatSteps = (steps: SolutionStep[]) => 
+            steps.map(s => `${s.step}. ${s.title}: ${s.description}`).join(' | ');
+
+        const headers = [
+            'ID', 'Timestamp', 'Company Type', 'Niche', 'Problem Description', 'Business Area', 
+            'Result Type', 'Grounded Answer', 'Sources', 'Identified Problem', 'Problem Impact',
+            'Short Term Title', 'Short Term Summary', 'Short Term Steps',
+            'Long Term Title', 'Long Term Summary', 'Long Term Steps',
+        ];
+
+        const csvRows = filteredRecords.map(record => {
+            const row: (string | number)[] = [
+                record.id,
+                record.timestamp,
+                record.companyType,
+                record.niche,
+                record.problemDescription,
+                record.businessArea,
+            ];
+
+            if ('answer' in record.result) { // GroundedAnswer
+                row.push(
+                    'Grounded',
+                    record.result.answer,
+                    record.result.sources.map(s => `${s.title} (${s.uri})`).join(' | '),
+                    '', '', '', '', '', '', '', ''
+                );
+            } else { // AnalysisResult
+                row.push(
+                    'Analysis',
+                    '', '', // No answer/sources
+                    record.result.problemAnalysis.identifiedProblem,
+                    record.result.problemAnalysis.impact,
+                    record.result.shortTermSolution.title,
+                    record.result.shortTermSolution.summary,
+                    formatSteps(record.result.shortTermSolution.steps),
+                    record.result.longTermSolution.title,
+                    record.result.longTermSolution.summary,
+                    formatSteps(record.result.longTermSolution.steps),
+                );
+            }
+            return row.map(escapeCsvField).join(',');
+        });
+
+        const csvString = [headers.join(','), ...csvRows].join('\n');
+        const blob = new Blob([`\uFEFF${csvString}`], { type: 'text/csv;charset=utf-8;' }); // BOM for Excel
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `GrowthMind_AI_Export_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+
+    const noResultsMessage = (
+        <div className="text-center text-slate-500 py-10 px-4">
+            <p>No se encontraron resultados.</p>
+            <p className="text-sm">Intenta ajustar tus filtros de búsqueda.</p>
+        </div>
+    );
+    
+    const noRecordsMessage = (
+        <div className="text-center text-slate-500 py-10 px-4">
+            <p>Aún no has generado ninguna solución.</p>
+            <p className="text-sm">Completa el formulario de arriba para empezar a construir tu base de conocimiento.</p>
+        </div>
+    );
 
 
     return (
@@ -75,88 +175,197 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                 </h2>
                 <p className="text-center text-slate-400 mb-6">Aquí se guardan todos los análisis que has generado. Puedes buscar, filtrar, ver los detalles o exportar a PDF.</p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="relative">
-                        <label htmlFor="search-records" className="sr-only">Buscar...</label>
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <SearchIcon className="h-5 w-5 text-slate-400" />
+                <div className="bg-slate-800 rounded-2xl shadow-2xl shadow-slate-950/50 border border-slate-700 overflow-hidden p-4 sm:p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div className="relative">
+                            <label htmlFor="search-records" className="sr-only">Buscar...</label>
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <SearchIcon className="h-5 w-5 text-slate-400" />
+                            </div>
+                            <input
+                                type="search"
+                                id="search-records"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Buscar por empresa, nicho..."
+                                className="w-full pl-10 p-2.5 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                            />
                         </div>
-                        <input
-                            type="search"
-                            id="search-records"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Buscar por empresa, nicho..."
-                            className="w-full pl-10 p-2.5 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none"
-                        />
+                        <div>
+                            <select
+                                value={areaFilter}
+                                onChange={(e) => setAreaFilter(e.target.value as BusinessArea | 'all')}
+                                className="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                                aria-label="Filtrar por área de negocio"
+                            >
+                                <option value="all">Todas las Áreas</option>
+                                <optgroup label="Áreas Digitales">
+                                    <option value="marketing">Marketing Digital</option>
+                                    <option value="ecommerce">E-commerce</option>
+                                    <option value="social_media">Redes Sociales</option>
+                                    <option value="content">Contenido y SEO</option>
+                                    <option value="ux_ui">Experiencia de Usuario (UX/UI)</option>
+                                    <option value="data_analytics">Analítica de Datos</option>
+                                </optgroup>
+                                <optgroup label="Áreas de Negocio">
+                                    <option value="general">General</option>
+                                    <option value="sales">Ventas</option>
+                                    <option value="logistics">Logística</option>
+                                    <option value="hr">Recursos Humanos</option>
+                                    <option value="finance">Finanzas</option>
+                                    <option value="it">TI</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div>
+                            <select
+                                value={dateFilter}
+                                onChange={(e) => setDateFilter(e.target.value as any)}
+                                className="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                                aria-label="Filtrar por fecha"
+                            >
+                                <option value="all">Cualquier Fecha</option>
+                                <option value="last7days">Últimos 7 días</option>
+                                <option value="last30days">Últimos 30 días</option>
+                                <option value="lastyear">Último año</option>
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <select
-                            value={areaFilter}
-                            onChange={(e) => setAreaFilter(e.target.value as BusinessArea | 'all')}
-                            className="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none"
-                            aria-label="Filtrar por área de negocio"
+                    
+                    <div className="flex flex-wrap items-center justify-end gap-4 mb-6 border-b border-slate-700 pb-6">
+                        <span className="text-sm text-slate-400 mr-auto">Exportar {filteredRecords.length} {filteredRecords.length === 1 ? 'resultado' : 'resultados'}:</span>
+                        <button
+                            onClick={handleExportJson}
+                            disabled={filteredRecords.length === 0}
+                            className="flex items-center gap-2 text-sm text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Exportar a JSON"
                         >
-                            <option value="all">Todas las Áreas</option>
-                            <option value="general">General</option>
-                            <option value="marketing">Marketing</option>
-                            <option value="sales">Ventas</option>
-                            <option value="logistics">Logística</option>
-                            <option value="hr">Recursos Humanos</option>
-                            <option value="finance">Finanzas</option>
-                            <option value="it">TI</option>
-                        </select>
-                    </div>
-                    <div>
-                        <select
-                            value={dateFilter}
-                            onChange={(e) => setDateFilter(e.target.value as any)}
-                            className="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none"
-                            aria-label="Filtrar por fecha"
+                            <FileJsonIcon className="h-4 w-4" />
+                            JSON
+                        </button>
+                        <button
+                            onClick={handleExportCsv}
+                            disabled={filteredRecords.length === 0}
+                            className="flex items-center gap-2 text-sm text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Exportar a CSV"
                         >
-                            <option value="all">Cualquier Fecha</option>
-                            <option value="last7days">Últimos 7 días</option>
-                            <option value="last30days">Últimos 30 días</option>
-                            <option value="lastyear">Último año</option>
-                        </select>
+                            <SheetIcon className="h-4 w-4" />
+                            CSV
+                        </button>
+                        <button
+                            onClick={() => setIsExportingPdf(true)}
+                            disabled={filteredRecords.length === 0 || isExportingPdf || !!exportingRecordId}
+                            className="flex items-center gap-2 text-sm text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Exportar todo a PDF"
+                        >
+                            {isExportingPdf ? (
+                                <>
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Exportando...
+                                </>
+                            ) : (
+                                <>
+                                    <FileTextIcon className="h-4 w-4" />
+                                    PDF
+                                </>
+                            )}
+                        </button>
                     </div>
-                </div>
 
-                <div className="bg-slate-800 rounded-2xl shadow-2xl shadow-slate-950/50 border border-slate-700 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        {records.length > 0 ? (
-                            <table className="min-w-full divide-y divide-slate-700">
-                                <thead className="bg-slate-900/50">
-                                    <tr>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Empresa / Nicho</th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Problema</th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Área</th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Fecha</th>
-                                        <th scope="col" className="relative px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">
-                                            Acciones
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-slate-800 divide-y divide-slate-700">
-                                    {filteredRecords.length > 0 ? (
-                                        filteredRecords.map((record) => (
-                                            <tr key={record.id} className="hover:bg-slate-700/50 transition-all duration-200 transform hover:-translate-y-px">
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-medium text-slate-200">{record.companyType}</div>
-                                                    <div className="text-sm text-slate-400">{record.niche}</div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <p className="text-sm text-slate-300 max-w-xs truncate">{record.problemDescription}</p>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                    {records.length === 0 ? noRecordsMessage : (
+                        <>
+                            {/* Desktop Table View */}
+                            <div className="overflow-x-auto hidden md:block">
+                                <table className="min-w-full divide-y divide-slate-700">
+                                    <thead className="bg-slate-900/50">
+                                        <tr>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Empresa / Nicho</th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Problema</th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Área</th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Fecha</th>
+                                            <th scope="col" className="relative px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">
+                                                Acciones
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-slate-800 divide-y divide-slate-700">
+                                        {filteredRecords.length > 0 ? (
+                                            filteredRecords.map((record) => (
+                                                <tr key={record.id} className="hover:bg-slate-700/50 transition-all duration-200">
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm font-medium text-slate-200">{record.companyType}</div>
+                                                        <div className="text-sm text-slate-400">{record.niche}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <p className="text-sm text-slate-300 max-w-xs truncate">{record.problemDescription}</p>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                                                        <BusinessAreaDisplay area={record.businessArea} />
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                                                        {new Date(record.timestamp).toLocaleDateString()}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                        <div className="flex items-center justify-end space-x-4">
+                                                            <button onClick={() => handleViewRecord(record)} className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 transition transform hover:scale-110" aria-label="Ver detalles">
+                                                                <EyeIcon className="h-4 w-4" />
+                                                                Ver
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => setExportingRecordId(record.id)} 
+                                                                className="text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-wait transition transform hover:scale-110"
+                                                                aria-label="Exportar a PDF"
+                                                                disabled={!!exportingRecordId || isExportingPdf}
+                                                            >
+                                                                {exportingRecordId === record.id ? (
+                                                                    <>
+                                                                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                        </svg>
+                                                                        ...
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                      <FileDownIcon className="h-4 w-4" />
+                                                                      PDF
+                                                                    </>
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr><td colSpan={5}>{noResultsMessage}</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                             {/* Mobile Card View */}
+                             <div className="md:hidden">
+                                {filteredRecords.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {filteredRecords.map(record => (
+                                            <div key={record.id} className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div>
+                                                        <h3 className="text-sm font-medium text-slate-200">{record.companyType}</h3>
+                                                        <p className="text-sm text-slate-400">{record.niche}</p>
+                                                    </div>
                                                     <BusinessAreaDisplay area={record.businessArea} />
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
-                                                    {new Date(record.timestamp).toLocaleDateString()}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <div className="flex items-center justify-end space-x-4">
-                                                        <button onClick={() => handleViewRecord(record)} className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 transition transform hover:scale-110" aria-label="Ver detalles">
+                                                </div>
+                                                <p className="text-sm text-slate-300 line-clamp-2 my-2">{record.problemDescription}</p>
+                                                <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-700/50">
+                                                    <p className="text-sm text-slate-400">
+                                                        {new Date(record.timestamp).toLocaleDateString()}
+                                                    </p>
+                                                    <div className="flex items-center justify-end space-x-3">
+                                                         <button onClick={() => handleViewRecord(record)} className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 transition transform hover:scale-110" aria-label="Ver detalles">
                                                             <EyeIcon className="h-4 w-4" />
                                                             Ver
                                                         </button>
@@ -164,7 +373,7 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                                                             onClick={() => setExportingRecordId(record.id)} 
                                                             className="text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-wait transition transform hover:scale-110"
                                                             aria-label="Exportar a PDF"
-                                                            disabled={!!exportingRecordId}
+                                                            disabled={!!exportingRecordId || isExportingPdf}
                                                         >
                                                             {exportingRecordId === record.id ? (
                                                                 <>
@@ -172,7 +381,6 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                                                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                                     </svg>
-                                                                    ...
                                                                 </>
                                                             ) : (
                                                                 <>
@@ -182,26 +390,16 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                                                             )}
                                                         </button>
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={5} className="text-center text-slate-500 py-10 px-4">
-                                                <p>No se encontraron resultados.</p>
-                                                <p className="text-sm">Intenta ajustar tus filtros de búsqueda.</p>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        ) : (
-                            <div className="text-center text-slate-500 py-10 px-4">
-                                <p>Aún no has generado ninguna solución.</p>
-                                <p className="text-sm">Completa el formulario de arriba para empezar a construir tu base de conocimiento.</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    noResultsMessage
+                                )}
                             </div>
-                        )}
-                    </div>
+                        </>
+                    )}
                 </div>
             </div>
             {selectedRecord && <SolutionModal record={selectedRecord} onClose={handleCloseModal} />}
@@ -212,6 +410,15 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                     <PdfExporter 
                         record={recordToExport} 
                         onComplete={() => setExportingRecordId(null)} 
+                    />
+                </div>
+            )}
+            
+            {isExportingPdf && (
+                <div className="fixed left-[-9999px] top-[-9999px]" aria-hidden="true">
+                    <MultiRecordPdfExporter 
+                        records={filteredRecords} 
+                        onComplete={() => setIsExportingPdf(false)} 
                     />
                 </div>
             )}

@@ -26,7 +26,8 @@ const LoadingSkeleton: React.FC = () => (
     </div>
 );
 
-const SolutionSection: React.FC<{ title: string; children: React.ReactNode; textToSpeak: string; isPremium?: boolean; className?: string }> = ({ title, children, textToSpeak, isPremium, className }) => {
+// FIX: Add `style` prop to allow passing inline styles.
+const SolutionSection: React.FC<{ title: string; children: React.ReactNode; textToSpeak: string; isPremium?: boolean; className?: string; style?: React.CSSProperties }> = ({ title, children, textToSpeak, isPremium, className, style }) => {
     const [isSpeaking, setIsSpeaking] = useState(false);
     
     const handleSpeak = async () => {
@@ -43,7 +44,7 @@ const SolutionSection: React.FC<{ title: string; children: React.ReactNode; text
     };
     
     return (
-        <div className={`bg-slate-900/50 p-6 rounded-xl border border-slate-700 slide-in-up ${className}`}>
+        <div className={`bg-slate-900/50 p-6 rounded-xl border border-slate-700 slide-in-up ${className}`} style={style}>
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-cyan-400 flex items-center gap-2">
                     {title}

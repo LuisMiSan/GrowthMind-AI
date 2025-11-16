@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const SheetIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

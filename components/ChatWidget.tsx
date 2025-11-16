@@ -1,5 +1,4 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { Chat, Content, LiveSession, LiveServerMessage, Blob } from '@google/genai';
 import { startChat, connectToLiveSession } from '../services/geminiService';
 import type { ChatMessage } from '../types';
@@ -81,7 +80,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ onAnalyzeRequest }) => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isLoading, isListening]);
 
-    const cleanupVoice = async () => {
+    const cleanupVoice = useCallback(async () => {
         if (sessionPromiseRef.current) {
             try {
                 const session = await sessionPromiseRef.current;
@@ -109,7 +108,13 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ onAnalyzeRequest }) => {
         setIsVoiceMode(false);
         setIsListening(false);
         setIsSpeaking(false);
-    };
+    }, []);
+
+    const handleAnalyze = useCallback((content: string) => {
+        onAnalyzeRequest(content);
+        setIsOpen(false);
+        cleanupVoice();
+    }, [onAnalyzeRequest, cleanupVoice]);
 
     const handleToggleVoiceMode = async () => {
         if (isVoiceMode) {
@@ -219,7 +224,29 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ onAnalyzeRequest }) => {
         return () => {
             cleanupVoice();
         };
-    }, []);
+    }, [cleanupVoice]);
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Enter' && isVoiceMode) {
+                event.preventDefault();
+                const textToAnalyze = currentInputTranscriptionRef.current.trim();
+                if (textToAnalyze) {
+                    setMessages(prev => [...prev, { role: 'user', content: textToAnalyze }]);
+                    currentInputTranscriptionRef.current = '';
+                    handleAnalyze(textToAnalyze);
+                }
+            }
+        };
+
+        if (isOpen) {
+            window.addEventListener('keydown', handleKeyDown);
+        }
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isOpen, isVoiceMode, handleAnalyze]);
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -251,12 +278,6 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ onAnalyzeRequest }) => {
         setTimeout(() => setCopiedMessageIndex(null), 2000);
     };
 
-    const handleAnalyze = (content: string) => {
-        onAnalyzeRequest(content);
-        setIsOpen(false);
-        cleanupVoice();
-    };
-    
     const renderVoiceFooter = () => (
         <div className="p-4 border-t border-slate-700 flex flex-col items-center justify-center h-[76px]">
             <div className="flex items-center gap-4">
@@ -269,7 +290,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ onAnalyzeRequest }) => {
                 </button>
             </div>
             <p className="text-xs text-slate-400 mt-2">
-                 {isListening && !isSpeaking && 'Escuchando...'}
+                 {isListening && !isSpeaking && 'Escuchando... (Presiona Enter para analizar)'}
                  {isSpeaking && 'Hablando...'}
             </p>
         </div>

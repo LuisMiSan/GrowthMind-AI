@@ -82,7 +82,7 @@ const generatePrompt = (description: string, area: string): string => {
 };
 
 
-export const analyzeProblemComplex = async (description: string, area: string): Promise<AnalysisResult> => {
+export const analyzeProblemWithThinking = async (description: string, area: string): Promise<AnalysisResult> => {
     const prompt = generatePrompt(description, area);
     const response = await ai.models.generateContent({
         model: "gemini-2.5-pro",

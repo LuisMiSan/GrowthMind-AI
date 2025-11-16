@@ -1,4 +1,4 @@
-export type BusinessArea = 'marketing' | 'sales' | 'logistics' | 'hr' | 'finance' | 'it' | 'general';
+export type BusinessArea = 'marketing' | 'sales' | 'logistics' | 'hr' | 'finance' | 'it' | 'general' | 'ecommerce' | 'social_media' | 'content' | 'ux_ui' | 'data_analytics';
 
 export interface SolutionStep {
     step: number;

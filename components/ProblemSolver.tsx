@@ -1,7 +1,6 @@
-
 import React, { useState, forwardRef } from 'react';
 import type { BusinessArea, AnalysisResult, GroundedAnswer, Example, SolutionRecord } from '../types';
-import { analyzeProblemComplex, analyzeProblemWithSearch } from '../services/geminiService';
+import { analyzeProblemWithThinking, analyzeProblemWithSearch } from '../services/geminiService';
 import { SolutionDisplay } from './SolutionDisplay';
 import { SparklesIcon } from './icons/SparklesIcon';
 import { ExamplePicker } from './ExamplePicker';
@@ -13,7 +12,7 @@ interface ProblemSolverProps {
 }
 
 export const ProblemSolver = forwardRef<HTMLDivElement, ProblemSolverProps>(({ onSolutionGenerated, description, onDescriptionChange }, ref) => {
-    const [area, setArea] = useState<BusinessArea>('general');
+    const [area, setArea] = useState<BusinessArea>('marketing');
     const [companyType, setCompanyType] = useState('');
     const [niche, setNiche] = useState('');
     const [useSearch, setUseSearch] = useState(false);
@@ -37,7 +36,7 @@ export const ProblemSolver = forwardRef<HTMLDivElement, ProblemSolverProps>(({ o
             if (useSearch) {
                 response = await analyzeProblemWithSearch(description, area);
             } else {
-                response = await analyzeProblemComplex(description, area);
+                response = await analyzeProblemWithThinking(description, area);
             }
             setResult(response);
             onSolutionGenerated({
@@ -83,7 +82,7 @@ export const ProblemSolver = forwardRef<HTMLDivElement, ProblemSolverProps>(({ o
                 </div>
             </div>
 
-            <h2 className="text-2xl font-bold mb-4 text-center text-slate-200">Describe tu Propio Desafío</h2>
+            <h2 className="text-2xl font-bold mb-4 text-center text-slate-200">Describe tu problema</h2>
             <p className="text-center text-slate-400 mb-6">Nuestra IA analizará tu situación y te proporcionará soluciones a medida.</p>
             
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -135,22 +134,37 @@ export const ProblemSolver = forwardRef<HTMLDivElement, ProblemSolverProps>(({ o
                             className="w-full p-3 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none"
                             disabled={isLoading}
                         >
-                            <option value="general">General</option>
-                            <option value="marketing">Marketing</option>
-                            <option value="sales">Ventas</option>
-                            <option value="logistics">Logística</option>
-                            <option value="hr">Recursos Humanos</option>
-                            <option value="finance">Finanzas</option>
-                            <option value="it">TI</option>
+                            <optgroup label="Áreas Digitales">
+                                <option value="marketing">Marketing Digital</option>
+                                <option value="ecommerce">E-commerce</option>
+                                <option value="social_media">Redes Sociales</option>
+                                <option value="content">Contenido y SEO</option>
+                                <option value="ux_ui">Experiencia de Usuario (UX/UI)</option>
+                                <option value="data_analytics">Analítica de Datos</option>
+                            </optgroup>
+                            <optgroup label="Áreas de Negocio">
+                                <option value="general">General</option>
+                                <option value="sales">Ventas</option>
+                                <option value="logistics">Logística</option>
+                                <option value="hr">Recursos Humanos</option>
+                                <option value="finance">Finanzas</option>
+                                <option value="it">TI</option>
+                            </optgroup>
                         </select>
                     </div>
 
                      <div className="flex flex-col space-y-2">
                         <label className="block text-sm font-medium text-slate-400">Modo de Análisis</label>
                         <div className="flex bg-slate-900 rounded-lg border border-slate-700 p-1">
-                            <button type="button" onClick={() => handleToggleChange('thinking')} className={`w-1/2 py-2 text-sm rounded-md transition-all duration-200 transform hover:scale-105 ${useThinkingMode ? 'bg-cyan-600 text-white shadow-md' : 'hover:bg-slate-700/80'}`}>Análisis Profundo</button>
+                            <button type="button" onClick={() => handleToggleChange('thinking')} className={`w-1/2 py-2 text-sm rounded-md transition-all duration-200 transform hover:scale-105 ${useThinkingMode ? 'bg-cyan-600 text-white shadow-md' : 'hover:bg-slate-700/80'}`}>Análisis Avanzado</button>
                             <button type="button" onClick={() => handleToggleChange('search')} className={`w-1/2 py-2 text-sm rounded-md transition-all duration-200 transform hover:scale-105 ${useSearch ? 'bg-cyan-600 text-white shadow-md' : 'hover:bg-slate-700/80'}`}>Búsqueda Web</button>
                         </div>
+                         <p className="text-xs text-slate-500 px-1 text-center">
+                            {useThinkingMode
+                                ? 'Usa un modelo de IA superior para un análisis más profundo y soluciones complejas.'
+                                : 'Usa búsqueda web para respuestas rápidas y basadas en información actual.'
+                            }
+                        </p>
                     </div>
                 </div>
 
@@ -161,7 +175,7 @@ export const ProblemSolver = forwardRef<HTMLDivElement, ProblemSolverProps>(({ o
                 >
                     {isLoading ? (
                         <>
-                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
