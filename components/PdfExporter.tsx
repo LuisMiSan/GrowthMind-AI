@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import type { SolutionRecord } from '../types';
 import { SolutionDisplay } from './SolutionDisplay';
@@ -24,7 +23,7 @@ export const PdfExporter: React.FC<PdfExporterProps> = ({ record, onComplete }) 
             try {
                 const canvas = await html2canvas(contentRef.current, {
                     scale: 2,
-                    backgroundColor: '#1e293b', // slate-800
+                    backgroundColor: '#172554', // blue-900
                     useCORS: true,
                     width: 1024,
                     windowWidth: 1024,
@@ -71,7 +70,7 @@ export const PdfExporter: React.FC<PdfExporterProps> = ({ record, onComplete }) 
     if (!record) return null;
 
     return (
-        <div ref={contentRef} className="bg-slate-800 text-white p-6 w-[1024px]">
+        <div ref={contentRef} className="bg-blue-950 text-white p-6 w-[1024px]">
              <style>
                 {`
                     body .pdf-export-mode [aria-label="Escuchar texto"] {
@@ -80,10 +79,10 @@ export const PdfExporter: React.FC<PdfExporterProps> = ({ record, onComplete }) 
                 `}
             </style>
             <div className="mb-6">
-                <h2 className="text-2xl font-bold text-slate-200">{record.companyType} - {record.niche}</h2>
-                <hr className="my-4 border-slate-700" />
-                <h3 className="font-semibold text-slate-300 mb-2">Problema Descrito:</h3>
-                <p className="text-slate-400 bg-slate-900/50 p-3 rounded-lg border border-slate-700">{record.problemDescription}</p>
+                <h2 className="text-2xl font-bold text-gray-200">{record.companyType} - {record.niche}</h2>
+                <hr className="my-4 border-blue-800" />
+                <h3 className="font-semibold text-gray-300 mb-2">Problema Descrito:</h3>
+                <p className="text-gray-400 bg-blue-900/50 p-3 rounded-lg border border-blue-700">{record.problemDescription}</p>
             </div>
             <SolutionDisplay result={record.result} isLoading={false} />
         </div>
@@ -96,28 +95,28 @@ interface MultiRecordPdfExporterProps {
 }
 
 const RecordForPdf: React.FC<{ record: SolutionRecord }> = ({ record }) => (
-    <div className="p-4 mb-4 border-b border-slate-600 last:border-b-0">
-        <h2 className="text-xl font-bold text-slate-200">{record.companyType} - {record.niche}</h2>
-        <div className="flex items-center gap-x-4 gap-y-1 flex-wrap mt-1 text-sm text-slate-400">
+    <div className="p-4 mb-4 border-b border-blue-800 last:border-b-0 bg-blue-950/50 rounded-lg">
+        <h2 className="text-xl font-bold text-gray-200">{record.companyType} - {record.niche}</h2>
+        <div className="flex items-center gap-x-4 gap-y-1 flex-wrap mt-1 text-sm text-gray-400">
             <BusinessAreaDisplay area={record.businessArea} />
             <span>{new Date(record.timestamp).toLocaleDateString()}</span>
         </div>
-        <hr className="my-3 border-slate-700" />
-        <h3 className="font-semibold text-slate-300 mb-1">Problema:</h3>
-        <p className="text-slate-400 text-sm mb-3">{record.problemDescription}</p>
+        <hr className="my-3 border-blue-700" />
+        <h3 className="font-semibold text-gray-300 mb-1">Problema:</h3>
+        <p className="text-gray-400 text-sm mb-3">{record.problemDescription}</p>
         {'answer' in record.result ? (
             <div>
-                 <h3 className="font-semibold text-slate-300 mb-1">Respuesta (Búsqueda Web):</h3>
-                 <p className="text-slate-400 text-sm whitespace-pre-wrap">{record.result.answer}</p>
+                 <h3 className="font-semibold text-gray-300 mb-1">Respuesta (Búsqueda Web):</h3>
+                 <p className="text-gray-400 text-sm whitespace-pre-wrap">{record.result.answer}</p>
             </div>
         ) : (
             <div>
-                 <h3 className="font-semibold text-slate-300 mb-1">Diagnóstico del Problema:</h3>
-                 <p className="text-slate-400 text-sm">{record.result.problemAnalysis.identifiedProblem}</p>
-                 <h3 className="font-semibold text-slate-300 mb-1 mt-2">Solución a Corto Plazo:</h3>
-                 <p className="text-slate-400 text-sm">{record.result.shortTermSolution.summary}</p>
-                 <h3 className="font-semibold text-slate-300 mb-1 mt-2">Solución a Largo Plazo:</h3>
-                 <p className="text-slate-400 text-sm">{record.result.longTermSolution.summary}</p>
+                 <h3 className="font-semibold text-gray-300 mb-1">Diagnóstico del Problema:</h3>
+                 <p className="text-gray-400 text-sm">{record.result.problemAnalysis.identifiedProblem}</p>
+                 <h3 className="font-semibold text-gray-300 mb-1 mt-2">Solución a Corto Plazo:</h3>
+                 <p className="text-gray-400 text-sm">{record.result.shortTermSolution.summary}</p>
+                 <h3 className="font-semibold text-gray-300 mb-1 mt-2">Solución a Largo Plazo:</h3>
+                 <p className="text-gray-400 text-sm">{record.result.longTermSolution.summary}</p>
             </div>
         )}
     </div>
@@ -137,7 +136,7 @@ export const MultiRecordPdfExporter: React.FC<MultiRecordPdfExporterProps> = ({ 
             try {
                 const canvas = await html2canvas(contentRef.current, {
                     scale: 2,
-                    backgroundColor: '#1e293b',
+                    backgroundColor: '#0c1434', // custom dark blue, like blue-950
                     useCORS: true,
                     width: 1024,
                     windowWidth: 1024,
@@ -182,10 +181,10 @@ export const MultiRecordPdfExporter: React.FC<MultiRecordPdfExporterProps> = ({ 
     }, [records, onComplete]);
 
     return (
-        <div ref={contentRef} className="bg-slate-800 text-white p-6 w-[1024px]">
-            <div className="text-center mb-6 border-b border-slate-600 pb-4">
+        <div ref={contentRef} className="bg-blue-950 text-white p-6 w-[1024px]">
+            <div className="text-center mb-6 border-b border-blue-700 pb-4">
               <h1 className="text-3xl font-bold">Exportación de Soluciones</h1>
-              <p className="text-slate-400">GrowthMind AI</p>
+              <p className="text-gray-400">GrowthMind AI</p>
             </div>
             {records.map(record => <RecordForPdf key={record.id} record={record} />)}
         </div>

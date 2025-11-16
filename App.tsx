@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Header } from './components/Header';
 import { ProblemSolver } from './components/ProblemSolver';
@@ -79,7 +78,7 @@ const App: React.FC = () => {
         <SolutionDatabase records={solutionRecords} />
       </main>
       <ChatWidget onAnalyzeRequest={handleAnalyzeRequest} />
-      <footer className="text-center p-4 text-slate-500 text-sm">
+      <footer className="text-center p-4 text-blue-400 text-sm">
         <p className="mb-2">
             <strong>Aviso:</strong> Esta es una versión beta con fines de prueba. No introduzcas datos comerciales críticos o sensibles. 
             Toda la información generada se guarda únicamente en tu navegador.

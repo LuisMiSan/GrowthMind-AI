@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import type { SolutionRecord, BusinessArea, SolutionStep } from '../types';
 import { SolutionModal } from './SolutionModal';
@@ -152,14 +151,14 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
 
 
     const noResultsMessage = (
-        <div className="text-center text-slate-500 py-10 px-4">
+        <div className="text-center text-gray-400 py-10 px-4">
             <p>No se encontraron resultados.</p>
             <p className="text-sm">Intenta ajustar tus filtros de búsqueda.</p>
         </div>
     );
     
     const noRecordsMessage = (
-        <div className="text-center text-slate-500 py-10 px-4">
+        <div className="text-center text-gray-400 py-10 px-4">
             <p>Aún no has generado ninguna solución.</p>
             <p className="text-sm">Completa el formulario de arriba para empezar a construir tu base de conocimiento.</p>
         </div>
@@ -169,18 +168,18 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
     return (
         <>
             <div className="w-full max-w-4xl mt-12 slide-in-up" style={{animationDelay: '200ms', opacity: 0}}>
-                <h2 className="text-2xl font-bold mb-4 text-center text-slate-200 flex items-center justify-center gap-3">
-                    <DatabaseIcon className="h-6 w-6 text-cyan-400" />
+                <h2 className="text-2xl font-bold mb-4 text-center text-gray-200 flex items-center justify-center gap-3">
+                    <DatabaseIcon className="h-6 w-6 text-orange-400" />
                     Base de Conocimiento
                 </h2>
-                <p className="text-center text-slate-400 mb-6">Aquí se guardan todos los análisis que has generado. Puedes buscar, filtrar, ver los detalles o exportar a PDF.</p>
+                <p className="text-center text-gray-400 mb-6">Aquí se guardan todos los análisis que has generado. Puedes buscar, filtrar, ver los detalles o exportar a PDF.</p>
                 
-                <div className="bg-slate-800 rounded-2xl shadow-2xl shadow-slate-950/50 border border-slate-700 overflow-hidden p-4 sm:p-6">
+                <div className="bg-blue-950/50 rounded-2xl border border-blue-800 overflow-hidden p-4 sm:p-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <div className="relative">
                             <label htmlFor="search-records" className="sr-only">Buscar...</label>
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <SearchIcon className="h-5 w-5 text-slate-400" />
+                                <SearchIcon className="h-5 w-5 text-gray-400" />
                             </div>
                             <input
                                 type="search"
@@ -188,14 +187,14 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Buscar por empresa, nicho..."
-                                className="w-full pl-10 p-2.5 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                                className="w-full pl-10 p-2.5 bg-blue-900 border border-blue-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
                             />
                         </div>
                         <div>
                             <select
                                 value={areaFilter}
                                 onChange={(e) => setAreaFilter(e.target.value as BusinessArea | 'all')}
-                                className="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                                className="w-full p-2.5 bg-blue-900 border border-blue-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
                                 aria-label="Filtrar por área de negocio"
                             >
                                 <option value="all">Todas las Áreas</option>
@@ -221,7 +220,7 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                             <select
                                 value={dateFilter}
                                 onChange={(e) => setDateFilter(e.target.value as any)}
-                                className="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                                className="w-full p-2.5 bg-blue-900 border border-blue-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
                                 aria-label="Filtrar por fecha"
                             >
                                 <option value="all">Cualquier Fecha</option>
@@ -232,12 +231,12 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                         </div>
                     </div>
                     
-                    <div className="flex flex-wrap items-center justify-end gap-4 mb-6 border-b border-slate-700 pb-6">
-                        <span className="text-sm text-slate-400 mr-auto">Exportar {filteredRecords.length} {filteredRecords.length === 1 ? 'resultado' : 'resultados'}:</span>
+                    <div className="flex flex-wrap items-center justify-end gap-4 mb-6 border-b border-blue-800 pb-6">
+                        <span className="text-sm text-gray-400 mr-auto">Exportar {filteredRecords.length} {filteredRecords.length === 1 ? 'resultado' : 'resultados'}:</span>
                         <button
                             onClick={handleExportJson}
                             disabled={filteredRecords.length === 0}
-                            className="flex items-center gap-2 text-sm text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center gap-2 text-sm text-gray-300 hover:text-white bg-blue-800 hover:bg-blue-700 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             aria-label="Exportar a JSON"
                         >
                             <FileJsonIcon className="h-4 w-4" />
@@ -246,7 +245,7 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                         <button
                             onClick={handleExportCsv}
                             disabled={filteredRecords.length === 0}
-                            className="flex items-center gap-2 text-sm text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center gap-2 text-sm text-gray-300 hover:text-white bg-blue-800 hover:bg-blue-700 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             aria-label="Exportar a CSV"
                         >
                             <SheetIcon className="h-4 w-4" />
@@ -255,7 +254,7 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                         <button
                             onClick={() => setIsExportingPdf(true)}
                             disabled={filteredRecords.length === 0 || isExportingPdf || !!exportingRecordId}
-                            className="flex items-center gap-2 text-sm text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center gap-2 text-sm text-gray-300 hover:text-white bg-blue-800 hover:bg-blue-700 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             aria-label="Exportar todo a PDF"
                         >
                             {isExportingPdf ? (
@@ -279,44 +278,44 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                         <>
                             {/* Desktop Table View */}
                             <div className="overflow-x-auto hidden md:block">
-                                <table className="min-w-full divide-y divide-slate-700">
-                                    <thead className="bg-slate-900/50">
+                                <table className="min-w-full divide-y divide-blue-800">
+                                    <thead className="bg-black/20">
                                         <tr>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Empresa / Nicho</th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Problema</th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Área</th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Fecha</th>
-                                            <th scope="col" className="relative px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Empresa / Nicho</th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Problema</th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Área</th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Fecha</th>
+                                            <th scope="col" className="relative px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
                                                 Acciones
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="bg-slate-800 divide-y divide-slate-700">
+                                    <tbody className="divide-y divide-blue-800">
                                         {filteredRecords.length > 0 ? (
                                             filteredRecords.map((record) => (
-                                                <tr key={record.id} className="hover:bg-slate-700/50 transition-all duration-200">
+                                                <tr key={record.id} className="hover:bg-blue-900/50 transition-all duration-200">
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm font-medium text-slate-200">{record.companyType}</div>
-                                                        <div className="text-sm text-slate-400">{record.niche}</div>
+                                                        <div className="text-sm font-medium text-gray-200">{record.companyType}</div>
+                                                        <div className="text-sm text-gray-400">{record.niche}</div>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        <p className="text-sm text-slate-300 max-w-xs truncate">{record.problemDescription}</p>
+                                                        <p className="text-sm text-gray-300 max-w-xs truncate">{record.problemDescription}</p>
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
                                                         <BusinessAreaDisplay area={record.businessArea} />
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
                                                         {new Date(record.timestamp).toLocaleDateString()}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                         <div className="flex items-center justify-end space-x-4">
-                                                            <button onClick={() => handleViewRecord(record)} className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 transition transform hover:scale-110" aria-label="Ver detalles">
+                                                            <button onClick={() => handleViewRecord(record)} className="text-orange-400 hover:text-orange-300 flex items-center gap-1.5 transition transform hover:scale-110" aria-label="Ver detalles">
                                                                 <EyeIcon className="h-4 w-4" />
                                                                 Ver
                                                             </button>
                                                             <button 
                                                                 onClick={() => setExportingRecordId(record.id)} 
-                                                                className="text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-wait transition transform hover:scale-110"
+                                                                className="text-blue-400 hover:text-blue-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-wait transition transform hover:scale-110"
                                                                 aria-label="Exportar a PDF"
                                                                 disabled={!!exportingRecordId || isExportingPdf}
                                                             >
@@ -351,27 +350,27 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                                 {filteredRecords.length > 0 ? (
                                     <div className="space-y-4">
                                         {filteredRecords.map(record => (
-                                            <div key={record.id} className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+                                            <div key={record.id} className="bg-blue-900/40 rounded-lg p-4 border border-blue-800">
                                                 <div className="flex justify-between items-start mb-2">
                                                     <div>
-                                                        <h3 className="text-sm font-medium text-slate-200">{record.companyType}</h3>
-                                                        <p className="text-sm text-slate-400">{record.niche}</p>
+                                                        <h3 className="text-sm font-medium text-gray-200">{record.companyType}</h3>
+                                                        <p className="text-sm text-gray-400">{record.niche}</p>
                                                     </div>
                                                     <BusinessAreaDisplay area={record.businessArea} />
                                                 </div>
-                                                <p className="text-sm text-slate-300 line-clamp-2 my-2">{record.problemDescription}</p>
-                                                <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-700/50">
-                                                    <p className="text-sm text-slate-400">
+                                                <p className="text-sm text-gray-300 line-clamp-2 my-2">{record.problemDescription}</p>
+                                                <div className="flex justify-between items-center mt-3 pt-3 border-t border-blue-800/50">
+                                                    <p className="text-sm text-gray-400">
                                                         {new Date(record.timestamp).toLocaleDateString()}
                                                     </p>
                                                     <div className="flex items-center justify-end space-x-3">
-                                                         <button onClick={() => handleViewRecord(record)} className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 transition transform hover:scale-110" aria-label="Ver detalles">
+                                                         <button onClick={() => handleViewRecord(record)} className="text-orange-400 hover:text-orange-300 flex items-center gap-1.5 transition transform hover:scale-110" aria-label="Ver detalles">
                                                             <EyeIcon className="h-4 w-4" />
                                                             Ver
                                                         </button>
                                                         <button 
                                                             onClick={() => setExportingRecordId(record.id)} 
-                                                            className="text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-wait transition transform hover:scale-110"
+                                                            className="text-blue-400 hover:text-blue-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-wait transition transform hover:scale-110"
                                                             aria-label="Exportar a PDF"
                                                             disabled={!!exportingRecordId || isExportingPdf}
                                                         >

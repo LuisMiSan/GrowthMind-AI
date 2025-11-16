@@ -289,7 +289,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ onAnalyzeRequest }) => {
                     <StopCircleIcon className="h-6 w-6" />
                 </button>
             </div>
-            <p className="text-xs text-slate-400 mt-2">
+            <p className="text-xs text-gray-400 mt-2">
                  {isListening && !isSpeaking && 'Escuchando... (Presiona Enter para analizar)'}
                  {isSpeaking && 'Hablando...'}
             </p>
@@ -304,19 +304,19 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ onAnalyzeRequest }) => {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="Escribe tu pregunta..."
-                    className="w-full p-3 pr-24 bg-slate-900 border border-slate-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                    className="w-full p-3 pr-24 bg-slate-800 border border-slate-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
                     disabled={isLoading || isVoiceMode}
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center">
                     <button
                         type="button"
                         onClick={handleToggleVoiceMode}
-                        className="flex items-center justify-center w-12 text-slate-400 hover:text-cyan-400"
+                        className="flex items-center justify-center w-12 text-gray-400 hover:text-orange-400"
                         aria-label="Iniciar chat de voz"
                     >
                          <MicrophoneIcon />
                     </button>
-                    <button type="submit" className="flex items-center justify-center w-12 text-slate-400 hover:text-cyan-400 disabled:opacity-50" disabled={isLoading || !inputValue.trim()}>
+                    <button type="submit" className="flex items-center justify-center w-12 text-gray-400 hover:text-orange-400 disabled:opacity-50" disabled={isLoading || !inputValue.trim()}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
                     </button>
                 </div>
@@ -328,7 +328,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ onAnalyzeRequest }) => {
         return (
             <button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-5 right-5 bg-cyan-600 text-white p-4 rounded-full shadow-lg hover:bg-cyan-700 transition-transform transform hover:scale-110"
+                className="fixed bottom-5 right-5 bg-orange-600 text-white p-4 rounded-full shadow-lg hover:bg-orange-700 transition-transform transform hover:scale-110"
                 aria-label="Abrir chat de ayuda"
             >
                 <BotIcon className="h-6 w-6" />
@@ -337,10 +337,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ onAnalyzeRequest }) => {
     }
 
     return (
-        <div className="fixed bottom-5 right-5 w-[calc(100%-2.5rem)] max-w-sm h-[70vh] max-h-[600px] flex flex-col bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 z-50 chat-widget-enter">
+        <div className="fixed bottom-5 right-5 w-[calc(100%-2.5rem)] max-w-sm h-[70vh] max-h-[600px] flex flex-col bg-slate-900 rounded-2xl shadow-2xl border border-slate-700 z-50 chat-widget-enter">
             <header className="flex items-center justify-between p-4 border-b border-slate-700">
-                <h3 className="text-lg font-bold flex items-center gap-2"><SparklesIcon className="text-cyan-400 h-5 w-5"/> Asistente Rápido</h3>
-                <button onClick={() => { setIsOpen(false); cleanupVoice(); }} className="p-1 rounded-full hover:bg-slate-700">
+                <h3 className="text-lg font-bold flex items-center gap-2"><SparklesIcon className="text-orange-400 h-5 w-5"/> Asistente Rápido</h3>
+                <button onClick={() => { setIsOpen(false); cleanupVoice(); }} className="p-1 rounded-full hover:bg-slate-800">
                     <CloseIcon className="h-5 w-5" />
                 </button>
             </header>
@@ -349,22 +349,22 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ onAnalyzeRequest }) => {
                 {messages.map((msg, index) => (
                     <div key={index} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} fade-in`}>
                         <div className={`max-w-xs md:max-w-sm px-4 py-2 ${msg.role === 'user' 
-                                ? 'bg-cyan-600 text-white rounded-t-xl rounded-bl-xl' 
-                                : 'bg-slate-700 text-slate-200 rounded-t-xl rounded-br-xl'}`}>
+                                ? 'bg-orange-600 text-white rounded-t-xl rounded-bl-xl' 
+                                : 'bg-slate-700 text-gray-200 rounded-t-xl rounded-br-xl'}`}>
                             <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                         </div>
                          {msg.role === 'model' && (
                             <div className="mt-2 flex items-center gap-2">
                                 <button 
                                     onClick={() => handleCopy(index, msg.content)}
-                                    className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-cyan-400 transition-colors p-1 rounded-md hover:bg-slate-700"
+                                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-orange-400 transition-colors p-1 rounded-md hover:bg-slate-700"
                                 >
                                     {copiedMessageIndex === index ? <CheckIcon className="h-3 w-3 text-green-400"/> : <CopyIcon className="h-3 w-3" />}
                                     {copiedMessageIndex === index ? 'Copiado' : 'Copiar'}
                                 </button>
                                 <button
                                      onClick={() => handleAnalyze(msg.content)}
-                                     className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-cyan-400 transition-colors p-1 rounded-md hover:bg-slate-700"
+                                     className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-orange-400 transition-colors p-1 rounded-md hover:bg-slate-700"
                                 >
                                     <SparklesIcon className="h-3 w-3" />
                                     Analizar
@@ -375,11 +375,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ onAnalyzeRequest }) => {
                 ))}
                 {(isLoading || isListening) && (
                     <div className="flex justify-start">
-                         <div className={`max-w-xs md:max-w-sm rounded-xl px-4 py-2 bg-slate-700 text-slate-200 ${isListening ? 'animate-pulse' : ''}`}>
+                         <div className={`max-w-xs md:max-w-sm rounded-xl px-4 py-2 bg-slate-700 text-gray-200 ${isListening ? 'animate-pulse' : ''}`}>
                             <div className="flex items-center space-x-2">
-                                <div className="w-2 h-2 bg-slate-400 rounded-full animate-pulse [animation-delay:-0.3s]"></div>
-                                <div className="w-2 h-2 bg-slate-400 rounded-full animate-pulse [animation-delay:-0.15s]"></div>
-                                <div className="w-2 h-2 bg-slate-400 rounded-full animate-pulse"></div>
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse [animation-delay:-0.3s]"></div>
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse [animation-delay:-0.15s]"></div>
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
                             </div>
                         </div>
                     </div>
