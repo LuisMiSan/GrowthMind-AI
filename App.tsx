@@ -49,6 +49,10 @@ const App: React.FC = () => {
     };
     setSolutionRecords(prevRecords => [newRecord, ...prevRecords]);
   };
+
+  const handleDeleteRecord = (recordId: string) => {
+    setSolutionRecords(prevRecords => prevRecords.filter(record => record.id !== recordId));
+  };
   
   const handleAuthSuccess = () => {
     sessionStorage.setItem(AUTH_KEY, 'true');
@@ -75,7 +79,7 @@ const App: React.FC = () => {
           onDescriptionChange={setMainDescription}
           onSolutionGenerated={handleSolutionGenerated} 
         />
-        <SolutionDatabase records={solutionRecords} />
+        <SolutionDatabase records={solutionRecords} onDeleteRecord={handleDeleteRecord} />
       </main>
       <ChatWidget onAnalyzeRequest={handleAnalyzeRequest} />
       <footer className="text-center p-4 text-blue-400 text-sm">

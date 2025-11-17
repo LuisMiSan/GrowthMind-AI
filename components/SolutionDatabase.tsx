@@ -10,18 +10,21 @@ import { SearchIcon } from './icons/SearchIcon';
 import { FileJsonIcon } from './icons/FileJsonIcon';
 import { SheetIcon } from './icons/SheetIcon';
 import { FileTextIcon } from './icons/FileTextIcon';
+import { Trash2Icon } from './icons/Trash2Icon';
 
 interface SolutionDatabaseProps {
     records: SolutionRecord[];
+    onDeleteRecord: (id: string) => void;
 }
 
-export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) => {
+export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records, onDeleteRecord }) => {
     const [selectedRecord, setSelectedRecord] = useState<SolutionRecord | null>(null);
     const [exportingRecordId, setExportingRecordId] = useState<string | null>(null);
     const [isExportingPdf, setIsExportingPdf] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [areaFilter, setAreaFilter] = useState<BusinessArea | 'all'>('all');
     const [dateFilter, setDateFilter] = useState<'all' | 'last7days' | 'last30days' | 'lastyear'>('all');
+    const [recordToDelete, setRecordToDelete] = useState<SolutionRecord | null>(null);
 
     const handleViewRecord = (record: SolutionRecord) => {
         setSelectedRecord(record);
@@ -149,6 +152,12 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
         URL.revokeObjectURL(url);
     };
 
+    const confirmDelete = () => {
+        if (recordToDelete) {
+            onDeleteRecord(recordToDelete.id);
+            setRecordToDelete(null);
+        }
+    };
 
     const noResultsMessage = (
         <div className="text-center text-gray-400 py-10 px-4">
@@ -308,7 +317,7 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                                                         {new Date(record.timestamp).toLocaleDateString()}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                        <div className="flex items-center justify-end space-x-4">
+                                                        <div className="flex items-center justify-end space-x-3">
                                                             <button onClick={() => handleViewRecord(record)} className="text-orange-400 hover:text-orange-300 flex items-center gap-1.5 transition transform hover:scale-110" aria-label="Ver detalles">
                                                                 <EyeIcon className="h-4 w-4" />
                                                                 Ver
@@ -333,6 +342,10 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                                                                       PDF
                                                                     </>
                                                                 )}
+                                                            </button>
+                                                            <button onClick={() => setRecordToDelete(record)} className="text-red-500 hover:text-red-400 flex items-center gap-1.5 transition transform hover:scale-110" aria-label="Eliminar registro">
+                                                                <Trash2Icon className="h-4 w-4" />
+                                                                Eliminar
                                                             </button>
                                                         </div>
                                                     </td>
@@ -363,30 +376,25 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                                                     <p className="text-sm text-gray-400">
                                                         {new Date(record.timestamp).toLocaleDateString()}
                                                     </p>
-                                                    <div className="flex items-center justify-end space-x-3">
-                                                         <button onClick={() => handleViewRecord(record)} className="text-orange-400 hover:text-orange-300 flex items-center gap-1.5 transition transform hover:scale-110" aria-label="Ver detalles">
+                                                    <div className="flex items-center justify-end space-x-2">
+                                                         <button onClick={() => handleViewRecord(record)} className="text-orange-400 hover:text-orange-300 flex items-center gap-1.5 transition transform hover:scale-110 p-1" aria-label="Ver detalles">
                                                             <EyeIcon className="h-4 w-4" />
                                                             Ver
                                                         </button>
                                                         <button 
                                                             onClick={() => setExportingRecordId(record.id)} 
-                                                            className="text-blue-400 hover:text-blue-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-wait transition transform hover:scale-110"
+                                                            className="text-blue-400 hover:text-blue-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-wait transition transform hover:scale-110 p-1"
                                                             aria-label="Exportar a PDF"
                                                             disabled={!!exportingRecordId || isExportingPdf}
                                                         >
                                                             {exportingRecordId === record.id ? (
-                                                                <>
-                                                                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                                    </svg>
-                                                                </>
+                                                                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                                             ) : (
-                                                                <>
-                                                                  <FileDownIcon className="h-4 w-4" />
-                                                                  PDF
-                                                                </>
+                                                                <FileDownIcon className="h-4 w-4" />
                                                             )}
+                                                        </button>
+                                                        <button onClick={() => setRecordToDelete(record)} className="text-red-500 hover:text-red-400 flex items-center gap-1.5 transition transform hover:scale-110 p-1" aria-label="Eliminar registro">
+                                                            <Trash2Icon className="h-4 w-4" />
                                                         </button>
                                                     </div>
                                                 </div>
@@ -402,6 +410,37 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records }) =
                 </div>
             </div>
             {selectedRecord && <SolutionModal record={selectedRecord} onClose={handleCloseModal} />}
+            
+            {recordToDelete && (
+                <div 
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex justify-center items-center p-4 fade-in"
+                    onClick={() => setRecordToDelete(null)}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="delete-confirmation-title"
+                >
+                    <div 
+                        className="bg-blue-950 rounded-2xl shadow-2xl border border-blue-800 w-full max-w-md scale-in p-6 text-center"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 id="delete-confirmation-title" className="text-lg font-bold text-red-400">Confirmar Eliminación</h3>
+                        <p className="text-gray-400 my-4">
+                            ¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.
+                        </p>
+                        <div className="flex justify-center gap-4 mt-6">
+                            <button onClick={() => setRecordToDelete(null)} className="px-6 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-950 focus:ring-gray-500">
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-950 focus:ring-red-500"
+                            >
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             
             {/* Off-screen exporter component */}
             {exportingRecordId && (
