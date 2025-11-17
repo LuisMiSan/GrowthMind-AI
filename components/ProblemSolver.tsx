@@ -83,7 +83,7 @@ export const ProblemSolver = forwardRef<HTMLDivElement, ProblemSolverProps>(({ o
             </div>
 
             <h2 className="text-2xl font-bold mb-4 text-center text-gray-200">Describe tu problema</h2>
-            <p className="text-center text-gray-400 mb-6">Nuestra IA analizará tu situación y te proporcionará soluciones a medida.</p>
+            <p className="text-center text-gray-400 mb-6">Nuestra IA analizará tu situación y te proporcionará posibles soluciones a medida.</p>
             
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div>

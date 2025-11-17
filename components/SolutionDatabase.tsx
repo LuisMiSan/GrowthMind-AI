@@ -363,38 +363,43 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records, onD
                                 {filteredRecords.length > 0 ? (
                                     <div className="space-y-4">
                                         {filteredRecords.map(record => (
-                                            <div key={record.id} className="bg-blue-900/40 rounded-lg p-4 border border-blue-800">
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <div>
-                                                        <h3 className="text-sm font-medium text-gray-200">{record.companyType}</h3>
-                                                        <p className="text-sm text-gray-400">{record.niche}</p>
+                                           <div key={record.id} className="bg-blue-900/50 rounded-xl p-4 border border-blue-800 flex flex-col gap-3 transition-all duration-300 hover:border-orange-500/50">
+                                                {/* Header */}
+                                                <div>
+                                                    <div className="flex justify-between items-start">
+                                                        <h3 className="font-bold text-gray-100">{record.companyType}</h3>
+                                                        <BusinessAreaDisplay area={record.businessArea} className="text-xs" />
                                                     </div>
-                                                    <BusinessAreaDisplay area={record.businessArea} />
+                                                    <p className="text-sm text-gray-400">{record.niche}</p>
                                                 </div>
-                                                <p className="text-sm text-gray-300 line-clamp-2 my-2">{record.problemDescription}</p>
-                                                <div className="flex justify-between items-center mt-3 pt-3 border-t border-blue-800/50">
-                                                    <p className="text-sm text-gray-400">
+                            
+                                                {/* Description */}
+                                                <p className="text-sm text-gray-300 line-clamp-3">{record.problemDescription}</p>
+                                                
+                                                {/* Footer with actions */}
+                                                <div className="flex justify-between items-center mt-2 pt-3 border-t border-blue-800/50">
+                                                    <p className="text-xs text-gray-500">
                                                         {new Date(record.timestamp).toLocaleDateString()}
                                                     </p>
-                                                    <div className="flex items-center justify-end space-x-2">
-                                                         <button onClick={() => handleViewRecord(record)} className="text-orange-400 hover:text-orange-300 flex items-center gap-1.5 transition transform hover:scale-110 p-1" aria-label="Ver detalles">
-                                                            <EyeIcon className="h-4 w-4" />
-                                                            Ver
-                                                        </button>
-                                                        <button 
+                                                    <div className="flex items-center justify-end space-x-1 sm:space-x-2">
+                                                         <button 
                                                             onClick={() => setExportingRecordId(record.id)} 
-                                                            className="text-blue-400 hover:text-blue-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-wait transition transform hover:scale-110 p-1"
+                                                            className="text-blue-400 hover:text-blue-300 p-2 rounded-full hover:bg-blue-900/80 flex items-center disabled:opacity-50 disabled:cursor-wait transition-all"
                                                             aria-label="Exportar a PDF"
                                                             disabled={!!exportingRecordId || isExportingPdf}
                                                         >
                                                             {exportingRecordId === record.id ? (
-                                                                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                                             ) : (
-                                                                <FileDownIcon className="h-4 w-4" />
+                                                                <FileDownIcon className="h-5 w-5" />
                                                             )}
                                                         </button>
-                                                        <button onClick={() => setRecordToDelete(record)} className="text-red-500 hover:text-red-400 flex items-center gap-1.5 transition transform hover:scale-110 p-1" aria-label="Eliminar registro">
-                                                            <Trash2Icon className="h-4 w-4" />
+                                                        <button onClick={() => setRecordToDelete(record)} className="text-red-500 hover:text-red-400 p-2 rounded-full hover:bg-red-900/50 flex items-center transition-all" aria-label="Eliminar registro">
+                                                            <Trash2Icon className="h-5 w-5" />
+                                                        </button>
+                                                         <button onClick={() => handleViewRecord(record)} className="bg-orange-600 hover:bg-orange-700 text-white font-bold flex items-center gap-1.5 transition-all transform hover:scale-105 px-3 sm:px-4 py-2 rounded-lg text-sm" aria-label="Ver detalles">
+                                                            <EyeIcon className="h-4 w-4" />
+                                                            <span>Ver</span>
                                                         </button>
                                                     </div>
                                                 </div>
