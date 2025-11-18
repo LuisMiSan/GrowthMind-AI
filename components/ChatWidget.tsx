@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { Chat, Content, LiveSession, LiveServerMessage, Blob } from '@google/genai';
 import { startChat, connectToLiveSession } from '../services/geminiService';
@@ -226,28 +227,6 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ onAnalyzeRequest }) => {
         };
     }, [cleanupVoice]);
 
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Enter' && isVoiceMode) {
-                event.preventDefault();
-                const textToAnalyze = currentInputTranscriptionRef.current.trim();
-                if (textToAnalyze) {
-                    setMessages(prev => [...prev, { role: 'user', content: textToAnalyze }]);
-                    currentInputTranscriptionRef.current = '';
-                    handleAnalyze(textToAnalyze);
-                }
-            }
-        };
-
-        if (isOpen) {
-            window.addEventListener('keydown', handleKeyDown);
-        }
-
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [isOpen, isVoiceMode, handleAnalyze]);
-
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!inputValue.trim() || isLoading) return;
@@ -290,7 +269,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ onAnalyzeRequest }) => {
                 </button>
             </div>
             <p className="text-xs text-gray-400 mt-2">
-                 {isListening && !isSpeaking && 'Escuchando... (Presiona Enter para analizar)'}
+                 {isListening && !isSpeaking && 'Escuchando...'}
                  {isSpeaking && 'Hablando...'}
             </p>
         </div>
