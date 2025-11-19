@@ -2,11 +2,16 @@
 import { GoogleGenAI, Type, Modality, Chat, GenerateContentResponse, Content, LiveSession, LiveServerMessage } from "@google/genai";
 import type { AnalysisResult, GroundedAnswer } from '../types';
 
-if (!process.env.API_KEY) {
+// Use a safe check for process.env to prevent ReferenceError in browsers
+const apiKey = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : undefined;
+
+if (!apiKey) {
+    // We throw here if the key is truly missing to alert the developer, 
+    // but the typeof check above prevents a crash if 'process' itself is undefined.
     throw new Error("API_KEY environment variable not set");
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey });
 
 const analysisSchema = {
     type: Type.OBJECT,

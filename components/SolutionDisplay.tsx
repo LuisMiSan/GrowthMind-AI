@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import type { AnalysisResult, GroundedAnswer } from '../types';
 import { getTtsAudio } from '../services/geminiService';
@@ -88,7 +89,7 @@ export const SolutionDisplay: React.FC<SolutionDisplayProps> = ({ result, isLoad
         const { answer, sources } = result;
         const textToSpeak = `${answer} ${sources.length > 0 ? 'Fuentes consultadas:' : ''} ${sources.map(s => s.title).join(', ')}`;
         return (
-             <SolutionSection title="Análisis con Búsqueda Web" textToSpeak={textToSpeak} className="opacity-0" style={{ animationDelay: '100ms' }}>
+             <SolutionSection title="Análisis con Búsqueda Web" textToSpeak={textToSpeak} style={{ animationDelay: '100ms' }}>
                  <p className="text-gray-300 whitespace-pre-wrap">{answer}</p>
                  {sources.length > 0 && (
                      <div className="mt-6">
@@ -115,7 +116,7 @@ export const SolutionDisplay: React.FC<SolutionDisplayProps> = ({ result, isLoad
     
     return (
         <div className="space-y-8">
-            <SolutionSection title="Diagnóstico del Problema" textToSpeak={`Problema identificado: ${problemAnalysis.identifiedProblem}. Impacto: ${problemAnalysis.impact}`} className="opacity-0" style={{ animationDelay: '100ms' }}>
+            <SolutionSection title="Diagnóstico del Problema" textToSpeak={`Problema identificado: ${problemAnalysis.identifiedProblem}. Impacto: ${problemAnalysis.impact}`} style={{ animationDelay: '100ms' }}>
                 <div>
                     <h4 className="font-semibold text-gray-300">Problema Identificado:</h4>
                     <p className="text-gray-400 mt-1">{problemAnalysis.identifiedProblem}</p>
@@ -126,7 +127,7 @@ export const SolutionDisplay: React.FC<SolutionDisplayProps> = ({ result, isLoad
                 </div>
             </SolutionSection>
 
-            <SolutionSection title={shortTermSolution.title} textToSpeak={shortTermText} isPremium={shortTermSolution.isPremium} className="opacity-0" style={{ animationDelay: '250ms' }}>
+            <SolutionSection title={shortTermSolution.title} textToSpeak={shortTermText} isPremium={shortTermSolution.isPremium} style={{ animationDelay: '250ms' }}>
                 <p className="text-gray-400 mb-4">{shortTermSolution.summary}</p>
                  <ul className="space-y-3">
                     {shortTermSolution.steps.map((step) => (
@@ -141,7 +142,7 @@ export const SolutionDisplay: React.FC<SolutionDisplayProps> = ({ result, isLoad
                 </ul>
             </SolutionSection>
 
-             <SolutionSection title={longTermSolution.title} textToSpeak={longTermText} isPremium={longTermSolution.isPremium} className="opacity-0" style={{ animationDelay: '400ms' }}>
+             <SolutionSection title={longTermSolution.title} textToSpeak={longTermText} isPremium={longTermSolution.isPremium} style={{ animationDelay: '400ms' }}>
                 <p className="text-gray-400 mb-4">{longTermSolution.summary}</p>
                  <ul className="space-y-3">
                     {longTermSolution.steps.map((step) => (

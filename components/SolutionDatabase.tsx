@@ -176,7 +176,7 @@ export const SolutionDatabase: React.FC<SolutionDatabaseProps> = ({ records, onD
 
     return (
         <>
-            <div className="w-full max-w-4xl mt-12 slide-in-up" style={{animationDelay: '200ms', opacity: 0}}>
+            <div className="w-full max-w-4xl mt-12 slide-in-up" style={{animationDelay: '200ms'}}>
                 <h2 className="text-2xl font-bold mb-4 text-center text-gray-200 flex items-center justify-center gap-3">
                     <DatabaseIcon className="h-6 w-6 text-orange-400" />
                     Base de Conocimiento
